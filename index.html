@@ -41,6 +41,8 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
 h1,h2,h3{font-family:var(--font-display);letter-spacing:-.01em;line-height:1.15;margin:0;text-wrap:balance}
 h1{font-size:28px;font-weight:700}
@@ -298,12 +300,29 @@ th.num{text-align:right}
   td .where{max-width:none;text-align:right}
   td.num{text-align:right}
 }
+/* password gate (public build) */
+.gate-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;padding:16px}
+.gate-box{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--brand);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.gate-box .mark{width:36px;height:36px;font-size:18px}
+.gate-box h1{font-size:20px}
+.gate-box p{font-size:14px;color:var(--fg-muted)}
+.gate-err{color:var(--bad);font-size:13px;font-weight:600;min-height:18px;margin:0}
 .csvbox{margin-top:12px}
 .csvbox textarea{font-family:var(--font-mono);font-size:12px;min-height:160px}
 </style>
 </head>
 <body>
 
+<div id="gate" class="gate-screen">
+  <form class="gate-box" id="gate-form" novalidate>
+    <div class="mark" aria-hidden="true">P</div>
+    <h1>Painless Project Management</h1>
+    <p>Aftersales Parts. Enter the password to continue.</p>
+    <label class="f">Password<input type="password" id="gate-pw" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <p class="gate-err" id="gate-err" aria-live="polite"></p>
+    <button type="submit" class="btn btn-primary">Enter</button>
+  </form>
+</div>
 <header class="top">
   <div class="top-inner">
     <div class="brand">
@@ -1199,7 +1218,31 @@ th.num{text-align:right}
       render({ preserve: true });
     });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  // ---------- password gate ----------
+  var GATE_KEY = 'ppm.unlocked';
+  var PASSWORD = 'gryffindor';
+  function isUnlocked() { try { return localStorage.getItem(GATE_KEY) === 'yes'; } catch (e) { return false; } }
+  function showGate(start) {
+    var g = $('#gate'), f = $('#gate-form'), pw = $('#gate-pw'), err = $('#gate-err');
+    g.hidden = false;
+    pw.focus();
+    f.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if ((pw.value || '').trim().toLowerCase() === PASSWORD) {
+        try { localStorage.setItem(GATE_KEY, 'yes'); } catch (x) {}
+        g.hidden = true;
+        start();
+      } else {
+        err.textContent = 'Wrong house. Try again.';
+        pw.value = '';
+        pw.focus();
+      }
+    });
+  }
+  function boot() {
+    if (isUnlocked()) { $('#gate').hidden = true; init(); } else showGate(init);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 </script>
 
