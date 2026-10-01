@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Painless Project Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one column under a charcoal bar with a red stripe and tabs; content caps at 1040px; the roll-up table turns into cards under 720px. */
+:root{
+  --bg:#F6F3F2; --surface:#FFFFFF; --surface-2:#EFEAE9; --line:#E1DAD8; --line-strong:#C9C0BE;
+  --fg:#231F20; --fg-muted:#6E6465; --fg-faint:#9A9092;
+  --brand:#C41230; --brand-ink:#FFFFFF; --brand-soft:#FBE7EB; --brand-hover:#A80F2A;
+  --bar:#231F20; --bar-ink:#FFFFFF; --bar-muted:#B9B1B2;
+  --ok:#1E7A3E; --ok-bg:#E1F2E6; --warn:#8A5A00; --warn-bg:#FBEFCF; --bad:#A80F2A; --bad-bg:#FBE1E6;
+  --shadow:0 1px 2px rgba(35,31,32,.05),0 6px 20px rgba(35,31,32,.06);
+  --font-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --font-body:"IBM Plex Sans","Segoe UI",Roboto,Arial,sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --radius:6px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171415; --surface:#201C1D; --surface-2:#2A2526; --line:#3A3335; --line-strong:#4D4547;
+    --fg:#F3EEED; --fg-muted:#AEA4A6; --fg-faint:#7E7577;
+    --brand:#E03A55; --brand-ink:#FFFFFF; --brand-soft:#3A1A22; --brand-hover:#F05570;
+    --bar:#0F0D0E; --bar-ink:#FFFFFF; --bar-muted:#A39A9B;
+    --ok:#6FCF8E; --ok-bg:#17301F; --warn:#F2C14E; --warn-bg:#3A2E0F; --bad:#FF7A8E; --bad-bg:#46151F;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171415; --surface:#201C1D; --surface-2:#2A2526; --line:#3A3335; --line-strong:#4D4547;
+  --fg:#F3EEED; --fg-muted:#AEA4A6; --fg-faint:#7E7577;
+  --brand:#E03A55; --brand-ink:#FFFFFF; --brand-soft:#3A1A22; --brand-hover:#F05570;
+  --bar:#0F0D0E; --bar-ink:#FFFFFF; --bar-muted:#A39A9B;
+  --ok:#6FCF8E; --ok-bg:#17301F; --warn:#F2C14E; --warn-bg:#3A2E0F; --bad:#FF7A8E; --bad-bg:#46151F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--font-display);letter-spacing:-.01em;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:28px;font-weight:700}
+h2{font-size:18px;font-weight:700}
+h3{font-size:16px;font-weight:600}
+p{margin:0}
+a{color:inherit}
+button{font:inherit}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-muted)}
+.muted{color:var(--fg-muted)}
+.small{font-size:13px}
+.mono{font-family:var(--font-mono);font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bar);color:var(--bar-ink);border-top:4px solid var(--brand)}
+.top-inner{max-width:1040px;margin:0 auto;padding-inline:16px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:0 24px}
+.brand{display:flex;align-items:center;gap:10px;padding-block:12px;min-width:0}
+.mark{width:30px;height:30px;border-radius:4px;background:var(--brand);color:#fff;display:grid;place-items:center;font:800 15px var(--font-display);flex:0 0 auto}
+.brand-text{display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.brand-text .eyebrow{color:var(--bar-muted)}
+.brand-text .name{font:700 18px/1.1 var(--font-display);color:var(--bar-ink);white-space:nowrap}
+.tabs{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none;background:none;border:0;color:var(--bar-muted);font:600 14px var(--font-body);padding:12px 12px 13px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;margin-bottom:-1px}
+.tab:hover{color:var(--bar-ink)}
+.tab[aria-current="page"]{color:var(--bar-ink);border-bottom-color:var(--brand)}
+.tab:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+@media (max-width:640px){
+  .tabs{margin-left:0;width:100%}
+  .brand-text .name{font-size:16px}
+}
+
+.banner{max-width:1040px;margin:16px auto 0;padding:10px 14px;border-radius:var(--radius);background:var(--warn-bg);color:var(--warn);font-size:14px;font-weight:500}
+.banner-wrap{padding-inline:16px}
+.main{max-width:1040px;margin:0 auto;padding-inline:16px;padding-block:24px 72px}
+
+/* generic blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.card + .card{margin-top:16px}
+.card h2{margin-bottom:12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card h2 .count{font:500 13px var(--font-body);color:var(--fg-muted);letter-spacing:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.page-head p{margin-top:4px}
+
+/* buttons */
+.btn{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);border-radius:var(--radius);padding:10px 16px;font-weight:600;font-size:14px;cursor:pointer;line-height:1.2;min-height:40px}
+.btn:hover{background:var(--surface-2)}
+.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn-primary:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+.btn-danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.btn-danger:hover{background:var(--bad-bg)}
+.btn-sm{padding:6px 10px;font-size:13px;min-height:32px}
+.btn-link{border:0;background:none;color:var(--brand);padding:0;min-height:0;text-decoration:underline;text-underline-offset:3px;font-weight:600}
+.cta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+
+/* chips */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg-muted);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.chip.on{background:var(--bar);border-color:var(--bar);color:var(--bar-ink)}
+.chip:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px 3px 7px;border-radius:999px;white-space:nowrap;line-height:1.4}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
+.pill.g{background:var(--ok-bg);color:var(--ok)}
+.pill.a{background:var(--warn-bg);color:var(--warn)}
+.pill.r{background:var(--bad-bg);color:var(--bad)}
+.pill.help{background:var(--brand);color:var(--brand-ink)}
+.pill.help::before{background:var(--brand-ink)}
+.pill.n{background:var(--surface-2);color:var(--fg-muted)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--surface-2);color:var(--fg-muted)}
+.badge.closed{background:var(--bar);color:var(--bar-ink)}
+.badge.hold{background:var(--warn-bg);color:var(--warn)}
+.stale{color:var(--warn);font-weight:500}
+
+/* forms */
+fieldset{border:0;padding:0;margin:0;min-width:0}
+legend{padding:0}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.block legend{font:700 18px/1.2 var(--font-display);margin-bottom:4px;float:left;width:100%}
+.block .lede-hint{clear:both;margin:0 0 14px;color:var(--fg-muted);font-size:14px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;min-width:0}
+label.f .req{font-weight:500;color:var(--fg-faint);font-size:12px;margin-left:6px}
+label.f .opt{font-weight:500;color:var(--fg-faint);font-size:12px;margin-left:6px}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;font:inherit;font-size:15px;color:var(--fg);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius);padding:10px 12px;min-height:44px}
+textarea{resize:vertical;line-height:1.45}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
+input::placeholder,textarea::placeholder{color:var(--fg-faint)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.stack-f{display:flex;flex-direction:column;gap:14px}
+@media (max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+.hint{font-size:13px;font-weight:400;color:var(--fg-muted)}
+.choice{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.choice-q{display:block;font-weight:600;font-size:14px}
+.choice .hint{display:block;margin:2px 0 10px}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.seg span{display:inline-block;padding:9px 18px;font-weight:600;font-size:14px;cursor:pointer;color:var(--fg-muted);background:var(--surface);border-right:1px solid var(--line-strong);min-width:64px;text-align:center}
+.seg label:last-child span{border-right:0}
+.seg input:checked + span{background:var(--bar);color:var(--bar-ink)}
+.seg input:focus-visible + span{outline:2px solid var(--brand);outline-offset:-2px}
+.sub{margin-top:12px}
+.gate{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.gate-meter{min-width:220px;flex:0 1 280px}
+.gate-meter .num{display:block;font-size:13px;color:var(--fg-muted);margin-top:6px;font-weight:500}
+.meter{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.meter span{display:block;height:100%;background:var(--brand);width:0;transition:width .25s ease}
+.meter.ok span{background:var(--ok)}
+@media (prefers-reduced-motion:reduce){.meter span{transition:none}}
+.missing{background:var(--warn-bg);color:var(--warn);border-radius:var(--radius);padding:10px 14px;font-size:14px;margin-bottom:12px}
+.missing ul{margin:4px 0 0;padding-left:18px}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ms-row{display:grid;grid-template-columns:28px minmax(0,1fr) 150px 36px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.ms-row:last-of-type{border-bottom:0}
+.ms-row.charter{grid-template-columns:minmax(0,1fr) 150px 36px}
+.ms-row input[type=text],.ms-row input[type=date]{min-height:38px;padding:7px 10px;font-size:14px}
+.ms-row input[type=checkbox]{width:20px;height:20px;accent-color:var(--ok);margin:0 auto}
+.ms-row.done input[type=text]{text-decoration:line-through;color:var(--fg-muted)}
+.ms-row .x{appearance:none;border:0;background:none;color:var(--fg-faint);font-size:20px;line-height:1;cursor:pointer;width:36px;height:36px;border-radius:var(--radius)}
+.ms-row .x:hover{background:var(--surface-2);color:var(--bad)}
+.ms-row .x:focus-visible{outline:2px solid var(--brand)}
+.ms-row.over input[type=date]{border-color:var(--bad);color:var(--bad)}
+@media (max-width:560px){
+  .ms-row{grid-template-columns:28px minmax(0,1fr) 36px}
+  .ms-row.charter{grid-template-columns:minmax(0,1fr) 36px}
+  .ms-row input[type=date]{grid-column:2 / span 1}
+  .ms-row.charter input[type=date]{grid-column:1}
+  .ms-row .x,.ms-row span:last-child{grid-row:1;grid-column:3}
+  .ms-row.charter .x{grid-column:2}
+}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--bar);color:var(--bar-ink);padding:10px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;box-shadow:var(--shadow);z-index:50;max-width:calc(100% - 32px);opacity:0;transition:opacity .2s}
+.toast.show{opacity:1}
+.toast.err{background:var(--bad);color:#fff}
+
+/* how it works */
+.hero{max-width:720px;margin-bottom:28px}
+.hero h1{font-size:36px;font-weight:800;margin:6px 0 12px}
+.hero .lede{font-size:17px;color:var(--fg-muted);max-width:62ch}
+@media (max-width:640px){.hero h1{font-size:28px}}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:8px}
+.step-n{font:800 13px var(--font-display);color:var(--brand-ink);background:var(--brand);width:28px;height:28px;border-radius:4px;display:grid;place-items:center}
+.step h2{font-size:20px}
+.step p{font-size:14px}
+.house{color:var(--fg-muted);font-style:italic;font-size:13px;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line)}
+.rules ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px}
+.terms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}
+@media (max-width:640px){.terms{grid-template-columns:1fr}}
+.term{background:var(--surface-2);border-radius:var(--radius);padding:14px 16px;font-size:14px}
+.term strong{display:block;font-family:var(--font-display);font-size:15px;margin-bottom:2px}
+.board-note{margin-top:16px;font-size:14px;color:var(--fg-muted)}
+
+/* project list */
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.pcard{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;text-decoration:none;color:inherit;min-width:0}
+.pcard:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
+.pcard:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.pcard-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pcard-dept{font-size:12px;font-weight:600;color:var(--fg-muted)}
+.pcard h3{font-size:17px;overflow-wrap:anywhere}
+.empty{background:var(--surface);border:1px dashed var(--line-strong);border-radius:var(--radius);padding:32px 20px;text-align:center}
+.empty p{max-width:48ch;margin:6px auto 0;color:var(--fg-muted)}
+
+/* project page */
+.crumbs{font-size:13px;color:var(--fg-muted);margin-bottom:12px}
+.crumbs a{color:var(--brand);text-decoration:none;font-weight:600}
+.crumbs a:hover{text-decoration:underline}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.phead h1{margin:4px 0;overflow-wrap:anywhere}
+.phead-right{display:flex;flex-direction:column;gap:6px;min-width:180px}
+.phead-right label{font-size:12px;font-weight:600;color:var(--fg-muted)}
+.health{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.hcell{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.hcell .hl{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted)}
+.hcell .why{font-size:12px;color:var(--fg-muted);overflow-wrap:anywhere}
+@media (max-width:760px){.health{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cols{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.col .card + .card{margin-top:0}
+.prog{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;margin-bottom:10px}
+.prog span{display:block;height:100%;background:var(--ok)}
+.calc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.calc div{background:var(--surface-2);border-radius:var(--radius);padding:10px 12px}
+.calc .k{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-muted);display:block}
+.calc .v{font:600 18px var(--font-display);font-variant-numeric:tabular-nums}
+.calc .v.bad{color:var(--bad)}
+.calc .v.ok{color:var(--ok)}
+@media (max-width:560px){.calc{grid-template-columns:1fr}}
+.qa{display:flex;flex-direction:column;gap:12px}
+.qa .q{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);display:block;margin-bottom:2px}
+.qa .a{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px}
+.kv dt{color:var(--fg-muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.upd{display:flex;flex-direction:column;gap:10px}
+.upd-item{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.upd-item:first-child{border-top:0;padding-top:0}
+.upd-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--fg-muted)}
+.upd-note{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.upd-help{font-size:14px;color:var(--brand);font-weight:600;overflow-wrap:anywhere}
+.chk{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;cursor:pointer}
+.chk input{width:20px;height:20px;accent-color:var(--brand);margin:0}
+.danger{border-color:var(--bad-bg)}
+.danger p{font-size:14px;color:var(--fg-muted);margin-bottom:10px}
+.suggest{font-size:12px;color:var(--fg-muted);margin-top:4px}
+
+/* roll-up */
+.tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}
+@media (max-width:900px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;min-width:0}
+.tile .k{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-muted);display:block}
+.tile .v{font:700 24px/1.2 var(--font-display);font-variant-numeric:tabular-nums;display:block;margin-top:2px}
+.tile .s{font-size:12px;color:var(--fg-muted);display:block}
+.tile.alert .v{color:var(--bad)}
+.tile.warn .v{color:var(--warn)}
+.rfilters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.rfilters label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--fg-muted)}
+.rfilters select{min-height:40px;padding:7px 10px;font-size:14px;width:auto;min-width:160px}
+.summary p{font-size:15px;line-height:1.55}
+.summary .sum-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.summary .sum-head h2{margin:0}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.rowlink{cursor:pointer}
+tr.rowlink:hover td{background:var(--surface-2)}
+td.name{font-weight:600;min-width:160px}
+td.name .sub{display:block;font-size:12px;font-weight:400;color:var(--fg-muted);margin-top:2px}
+td .where{display:block;font-size:12px;color:var(--fg-muted);max-width:28ch}
+td.num{text-align:right;white-space:nowrap}
+td.upd{white-space:nowrap}
+th.num{text-align:right}
+@media (max-width:720px){
+  .tbl-wrap{background:transparent;border:0;overflow:visible}
+  table,thead,tbody,tr,td{display:block}
+  thead{display:none}
+  tr{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px}
+  td{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:5px 0;border-bottom:0;text-align:right}
+  td::before{content:attr(data-l);color:var(--fg-muted);font-size:12px;font-weight:600;flex:0 0 auto;text-align:left;padding-top:2px}
+  td.name{display:block;text-align:left;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:4px}
+  td.name::before{display:none}
+  td .where{max-width:none;text-align:right}
+  td.num{text-align:right}
+}
+.csvbox{margin-top:12px}
+.csvbox textarea{font-family:var(--font-mono);font-size:12px;min-height:160px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">P</div>
+      <div class="brand-text">
+        <span class="eyebrow">AGCO Aftersales Parts</span>
+        <span class="name">Painless Project Management</span>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab" data-tab="how">How it works</button>
+      <button class="tab" data-tab="start">Start a project</button>
+      <button class="tab" data-tab="projects">Projects</button>
+      <button class="tab" data-tab="report">Roll-up</button>
+    </nav>
+  </div>
+</header>
+<div class="banner-wrap"><div id="banner" class="banner" hidden></div></div>
+<main class="main" id="app"></main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- helpers ----------
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function uid(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  var DEPTS = ['Distribution & Logistics', 'Marketing', 'Sales & Dealer Programs', 'Pricing', 'Demand Fulfillment', 'Product Support', 'Facilities & IT', 'Other'];
+  var CER_STATUS = ['Not started', 'Submitted', 'Approved'];
+  var CLM_STATUS = ['Not started', 'In CLM', 'Signed'];
+  var STATUSES = ['Active', 'On hold', 'Closed'];
+  var SCHED = { green: 'On track', amber: 'At risk', red: 'Off track' };
+  var BUDG = { green: 'On budget', amber: 'At risk', red: 'Over budget' };
+  var MAX_MS = 8;
+  var STALE_DAYS = 14;
+  var EXAMPLES = [
+    { id: 'pexamplevlm', name: 'Example: Vertical lift module install', dept: 'Distribution & Logistics', lead: 'Example Lead', sponsor: 'Example Sponsor', why: 'Small-parts pick density and throughput are capped by shelving and walk time. Error rate on small parts is above target.', what: 'Install and commission a modular vertical lift module with pick-to-light, integrated with the WMS.', benefit: 'Faster picks, fewer errors, floor space back. Measured by picks per hour and error rate before and after go-live.', start: '2026-03-02', end: '2026-11-20', budget: 850000, spent: 610000, forecast: 840000, cerRequired: true, cerNumber: 'CER-EXAMPLE-01', cerStatus: 'Approved', clmRequired: true, clmWith: 'VLM vendor: install and commissioning SOW', clmStatus: 'Signed', strategy: '', status: 'Active', outcome: '', milestones: [{ id: 'm1', name: 'Vendor SOW signed', due: '2026-03-13', done: true }, { id: 'm2', name: 'Floor prep and power', due: '2026-05-15', done: true }, { id: 'm3', name: 'Modules delivered', due: '2026-07-24', done: true }, { id: 'm4', name: 'Installation and commissioning', due: '2026-09-18', done: true }, { id: 'm5', name: 'Go-live with pick-to-light', due: '2026-10-16', done: false }, { id: 'm6', name: 'Post go-live review', due: '2026-11-20', done: false }], updates: [{ at: '2026-09-25T15:00:00.000Z', schedule: 'green', budget: 'green', help: false, where: '', note: 'Commissioning complete. Operator training this week; go-live on schedule.', by: 'Example Lead' }], createdAt: '2026-02-20T15:00:00.000Z', updatedAt: '2026-09-25T15:00:00.000Z', example: true },
+    { id: 'pexamplepromo', name: 'Example: Q4 dealer parts promotion', dept: 'Marketing', lead: 'Example Lead', sponsor: 'Example Sponsor', why: 'Q4 parts volume is soft and dealers want a reason to stock up before the season.', what: 'Run a six-week promotion on filters and wear parts across the dealer network with co-branded materials.', benefit: 'Incremental Q4 parts revenue, measured against last year for the same SKUs.', start: '2026-08-17', end: '2026-12-11', budget: 120000, spent: 95000, forecast: 135000, cerRequired: false, cerNumber: '', cerStatus: 'Not required', clmRequired: true, clmWith: 'Print and fulfillment vendor', clmStatus: 'In CLM', strategy: '', status: 'Active', outcome: '', milestones: [{ id: 'm1', name: 'Promo SKUs and pricing approved', due: '2026-09-18', done: false }, { id: 'm2', name: 'Dealer materials shipped', due: '2026-10-09', done: false }, { id: 'm3', name: 'Promotion live', due: '2026-10-19', done: false }, { id: 'm4', name: 'Results readout', due: '2026-12-11', done: false }], updates: [{ at: '2026-09-26T15:00:00.000Z', schedule: 'amber', budget: 'amber', help: true, where: 'Pricing approval for the promo SKUs by Oct 10, or the materials miss the print window.', note: 'Vendor contract is in CLM. Print cost came in higher than quoted.', by: 'Example Lead' }], createdAt: '2026-08-10T15:00:00.000Z', updatedAt: '2026-09-26T15:00:00.000Z', example: true },
+    { id: 'pexamplepdc', name: 'Example: West Coast distribution center opening', dept: 'Distribution & Logistics', lead: 'Example Lead', sponsor: 'Example Sponsor', why: 'West Coast dealers were served from too far away; transit time and freight cost were out of line with the rest of the network.', what: 'Lease, fit out, staff, and stock a parts distribution center on the West Coast, and cut dealers over to it.', benefit: 'Shorter transit to West Coast dealers and lower outbound freight cost per order.', start: '2025-06-02', end: '2026-08-28', budget: 2000000, spent: 1950000, forecast: 1950000, cerRequired: true, cerNumber: 'CER-EXAMPLE-02', cerStatus: 'Approved', clmRequired: true, clmWith: 'Landlord lease; racking and MHE vendors', clmStatus: 'Signed', strategy: '', status: 'Closed', outcome: 'Facility open and shipping. Freight and transit targets to be confirmed after one full quarter of data.', milestones: [{ id: 'm1', name: 'Lease signed', due: '2025-07-31', done: true }, { id: 'm2', name: 'Racking and MHE installed', due: '2026-01-30', done: true }, { id: 'm3', name: 'Team hired and trained', due: '2026-04-24', done: true }, { id: 'm4', name: 'Inventory stocked', due: '2026-07-10', done: true }, { id: 'm5', name: 'Dealers cut over', due: '2026-08-28', done: true }], updates: [{ at: '2026-08-28T15:00:00.000Z', schedule: 'green', budget: 'green', help: false, where: '', note: 'Cutover complete. Closing the project.', by: 'Example Lead' }], createdAt: '2025-05-15T15:00:00.000Z', updatedAt: '2026-08-28T15:00:00.000Z', example: true }
+  ];
+
+  var App = {
+    store: null, storeKind: 'none', projects: [], ready: false, readOnly: false,
+    view: 'how', pid: null, listStatus: 'Active', rDept: '', rStatus: 'Active',
+    editCharter: false, confirmDelete: false, csvOpen: false, myName: ''
+  };
+
+  // ---------- dates and money ----------
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function todayISO() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseISO(s) {
+    if (!s) return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s));
+    if (!m) return null;
+    return Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  }
+  function daysBetween(a, b) {
+    var A = parseISO(a), B = parseISO(b);
+    if (A == null || B == null) return null;
+    return Math.round((B - A) / 86400000);
+  }
+  function fmtDate(s) {
+    var t = parseISO(s);
+    if (t == null) return '';
+    return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+  function fmtShort(s) {
+    var t = parseISO(s);
+    if (t == null) return '';
+    return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+  function daysAgo(iso) {
+    if (!iso) return null;
+    var t = Date.parse(iso);
+    if (isNaN(t)) return null;
+    return Math.max(0, Math.floor((Date.now() - t) / 86400000));
+  }
+  function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+  function money(n) {
+    n = num(n);
+    return (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
+  }
+  function moneyShort(n) {
+    n = num(n);
+    var a = Math.abs(n), s = n < 0 ? '-' : '';
+    if (a >= 1e6) return s + '$' + (a / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M';
+    if (a >= 1e3) return s + '$' + Math.round(a / 1e3) + 'K';
+    return s + '$' + Math.round(a);
+  }
+  function signed(n) { n = num(n); return (n >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US'); }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+  // ---------- health ----------
+  function openMilestones(p) { return (p.milestones || []).filter(function (m) { return !m.done; }); }
+  function nextMilestone(p) {
+    var open = openMilestones(p).filter(function (m) { return m.due; });
+    open.sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
+    return open[0] || null;
+  }
+  function scheduleSuggestion(p) {
+    if (p.status === 'Closed') return { rag: 'green', why: 'Closed' };
+    var ms = p.milestones || [];
+    if (!ms.length) return { rag: 'amber', why: 'No milestones yet' };
+    var today = todayISO(), open = openMilestones(p), worst = 0;
+    open.forEach(function (m) { var d = daysBetween(m.due, today); if (d != null && d > worst) worst = d; });
+    var pastEnd = daysBetween(p.end, today);
+    if (worst > 14) return { rag: 'red', why: 'A milestone is ' + worst + ' days overdue' };
+    if (pastEnd != null && pastEnd > 0 && open.length) return { rag: 'red', why: 'Past the end date with open milestones' };
+    if (worst > 0) return { rag: 'amber', why: 'A milestone is ' + plural(worst, 'day', 'days') + ' overdue' };
+    if (!open.length) return { rag: 'green', why: 'All milestones done' };
+    return { rag: 'green', why: 'Milestones on schedule' };
+  }
+  function budgetSuggestion(p) {
+    var approved = num(p.budget), spent = num(p.spent), fc = num(p.forecast);
+    if (!approved) return { rag: 'amber', why: 'No approved budget' };
+    var base = fc > 0 ? fc : spent, ratio = base / approved;
+    if (spent > approved * 1.0001 || ratio > 1.10) return { rag: 'red', why: 'Forecast ' + money(base) + ' against ' + money(approved) + ' approved' };
+    if (ratio > 1.0) return { rag: 'amber', why: 'Forecast over approved by ' + money(base - approved) };
+    return { rag: 'green', why: Math.round(ratio * 100) + '% of approved' };
+  }
+  function latestUpdate(p) { var u = p.updates || []; return u.length ? u[u.length - 1] : null; }
+  function health(p) {
+    var lu = latestUpdate(p), ss = scheduleSuggestion(p), bs = budgetSuggestion(p);
+    var age = lu ? daysAgo(lu.at) : null;
+    var active = (p.status || 'Active') === 'Active';
+    return {
+      schedule: lu ? lu.schedule : ss.rag,
+      budget: lu ? lu.budget : bs.rag,
+      help: !!(lu && lu.help),
+      where: lu ? (lu.where || '') : '',
+      age: age,
+      stale: active && (age == null || age > STALE_DAYS),
+      ss: ss, bs: bs, fromUpdate: !!lu
+    };
+  }
+  function attention(p) {
+    var h = health(p), s = 0;
+    if (h.help) s += 100;
+    s += h.schedule === 'red' ? 30 : h.schedule === 'amber' ? 10 : 0;
+    s += h.budget === 'red' ? 30 : h.budget === 'amber' ? 10 : 0;
+    if (h.stale) s += 5;
+    return s;
+  }
+  function updatedText(h) {
+    if (h.age == null) return 'No update yet';
+    if (h.age === 0) return 'Updated today';
+    return 'Updated ' + plural(h.age, 'day', 'days') + ' ago' + (h.stale ? ' (gone quiet)' : '');
+  }
+  function pill(kind, rag) {
+    var label = kind === 's' ? SCHED[rag] : BUDG[rag];
+    return '<span class="pill ' + (rag === 'green' ? 'g' : rag === 'amber' ? 'a' : 'r') + '">' + (label || rag) + '</span>';
+  }
+  function statusBadge(p) {
+    var s = p.status || 'Active';
+    if (s === 'Closed') return '<span class="badge closed">Closed</span>';
+    if (s === 'On hold') return '<span class="badge hold">On hold</span>';
+    return '';
+  }
+  function deptOptions(sel) {
+    return DEPTS.map(function (d) { return '<option value="' + esc(d) + '"' + (d === sel ? ' selected' : '') + '>' + esc(d) + '</option>'; }).join('');
+  }
+  function options(list, sel) {
+    return list.map(function (d) { return '<option value="' + esc(d) + '"' + (d === sel ? ' selected' : '') + '>' + esc(d) + '</option>'; }).join('');
+  }
+  function ragOptions(map, sel) {
+    return ['green', 'amber', 'red'].map(function (k) { return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + map[k] + '</option>'; }).join('');
+  }
+  function findProject(id) {
+    for (var i = 0; i < App.projects.length; i++) if (App.projects[i].id === id) return App.projects[i];
+    return null;
+  }
+
+  // ---------- stores ----------
+  function localStore() {
+    var KEY = 'ppm.projects', subs = [];
+    function read() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (raw == null) { localStorage.setItem(KEY, JSON.stringify(EXAMPLES)); return clone(EXAMPLES); }
+        return JSON.parse(raw || '[]');
+      } catch (e) { return []; }
+    }
+    function write(arr) {
+      try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch (e) {}
+      subs.forEach(function (cb) { cb(clone(arr)); });
+    }
+    return {
+      kind: 'local',
+      subscribe: function (cb) { subs.push(cb); setTimeout(function () { cb(read()); }, 0); return function () { subs = subs.filter(function (s) { return s !== cb; }); }; },
+      set: function (id, data) { var arr = read().filter(function (p) { return p.id !== id; }); var o = clone(data); o.id = id; arr.push(o); write(arr); return Promise.resolve(); },
+      remove: function (id) { write(read().filter(function (p) { return p.id !== id; })); return Promise.resolve(); }
+    };
+  }
+
+  var chains = {};
+  function errMsg(e) {
+    var c = e && e.code;
+    if (c === 'invalid_argument') return 'Could not save. You may need Contributor access to this page; ask the page owner.';
+    if (c === 'quota_exceeded') return 'The project database is full. Delete old projects to make room.';
+    if (c === 'resource_exhausted') return 'Too many changes at once. Wait a moment and try again.';
+    if (c === 'revoked' || c === 'not_granted') return 'Access to the shared database was withdrawn. Reload the page.';
+    return 'Could not save. Check your connection and try again.';
+  }
+  function persist(p) {
+    var id = p.id, data = clone(p);
+    delete data.id;
+    data.updatedAt = new Date().toISOString();
+    var copy = clone(data); copy.id = id;
+    var i = -1;
+    for (var k = 0; k < App.projects.length; k++) if (App.projects[k].id === id) { i = k; break; }
+    if (i >= 0) App.projects[i] = copy; else App.projects.push(copy);
+    chains[id] = (chains[id] || Promise.resolve()).then(function () { return App.store.set(id, data); }).then(function () { return true; }, function (e) { toast(errMsg(e), true); return false; });
+    return chains[id];
+  }
+
+  // ---------- toast and banner ----------
+  var toastTimer = null;
+  function toast(msg, isErr) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.className = 'toast'; }, isErr ? 6000 : 2600);
+  }
+  function updateBanner() {
+    var b = $('#banner');
+    if (App.readOnly) { b.textContent = 'You have view access. You can read everything here; ask the page owner for Contributor access to add or update projects.'; b.hidden = false; }
+    else if (App.storeKind === 'local') { b.textContent = 'Projects are saved in this browser only. Nothing leaves your device.'; b.hidden = false; }
+    else b.hidden = true;
+  }
+  function copyText(text, okMsg) {
+    var done = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { toast(okMsg || 'Copied'); }, function () { fallbackCopy(text); });
+        done = true;
+      }
+    } catch (e) {}
+    if (!done) fallbackCopy(text);
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.left = '-9999px';
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    toast(ok ? 'Copied' : 'Select the text and copy it yourself', !ok);
+  }
+
+  // ---------- views ----------
+  function howHTML() {
+    var active = App.projects.filter(function (p) { return (p.status || 'Active') === 'Active'; }).length;
+    var helps = App.projects.filter(function (p) { return (p.status || 'Active') === 'Active' && health(p).help; }).length;
+    var note = !App.ready ? '' :
+      '<p class="board-note">On the board right now: ' + plural(active, 'active project', 'active projects') + (helps ? ', ' + helps + ' asking for help' : '') + '. <a href="#report">Open the roll-up.</a></p>';
+    return '' +
+      '<section class="hero">' +
+        '<p class="eyebrow">How it works</p>' +
+        '<h1>Run a project without becoming a project manager.</h1>' +
+        '<p class="lede">Three steps, one page each. Think of building a house: draw the plans and get the loan before anyone digs, put the big steps on a calendar, and walk the site every week. That is the whole method.</p>' +
+        '<div class="cta-row">' + (App.readOnly ? '' : '<button class="btn btn-primary" data-action="go" data-to="start">Start a project</button>') + '<button class="btn" data-action="go" data-to="report">See the roll-up</button></div>' +
+      '</section>' +
+      '<section class="steps">' +
+        '<article class="step"><div class="step-n">1</div><h2>Charter it</h2><p>One page: which department, who sponsors it, who leads it, why, what, what we get, how much, when, CER or not, contract or not. Until the page is complete, it is not a project.</p><p class="house">The house: plans, permit, and the loan.</p></article>' +
+        '<article class="step"><div class="step-n">2</div><h2>Run it</h2><p>Keep up to eight milestones current. Keep three money numbers honest: approved, spent, forecast. Post a two-minute update every week: schedule, budget, and whether you need help.</p><p class="house">The house: foundation, framing, roof. Walk the site on Fridays.</p></article>' +
+        '<article class="step"><div class="step-n">3</div><h2>Report it</h2><p>Every project rolls up to one view: who needs help and where, what is off track, what is over budget, what has gone quiet. That view is what goes to the executives. Be honest in step 2 and step 3 does itself.</p><p class="house">The house: the inspector walks through.</p></article>' +
+      '</section>' +
+      '<section class="card rules"><h2>Rules of the road</h2><ul>' +
+        '<li><strong>Every project has a sponsor and a lead.</strong> Nobody else needs a title.</li>' +
+        '<li><strong>Eight milestones, maximum.</strong> If you need more, it is two projects.</li>' +
+        '<li><strong>The weekly update takes two minutes.</strong> Post it on Friday, even when nothing changed.</li>' +
+        '<li><strong>Red is not failure.</strong> Hiding red is.</li>' +
+        '<li><strong>If you need help, say where.</strong> That is how help finds you.</li>' +
+      '</ul>' +
+      '<div class="terms">' +
+        '<div class="term"><strong>CER</strong>Capital expenditure request. Needed for anything capitalized: equipment, buildouts, systems we will own. Get it moving before the project needs the money, not after.</div>' +
+        '<div class="term"><strong>CLM</strong>Contract lifecycle management. Any vendor agreement, statement of work, lease, or service contract goes through Legal here. Flag it on the charter so it is in the schedule, not a surprise.</div>' +
+      '</div>' + note + '</section>';
+  }
+
+  function msRowCharter(m, i) {
+    return '<div class="ms-row charter">' +
+      '<input type="text" id="c-ms-name-' + i + '" class="ms-name" placeholder="Milestone, e.g. Vendor SOW signed" value="' + esc(m ? m.name : '') + '" aria-label="Milestone name">' +
+      '<input type="date" id="c-ms-due-' + i + '" class="ms-due" value="' + esc(m ? m.due : '') + '" aria-label="Milestone date">' +
+      '<button type="button" class="x" data-action="c-rm-ms" aria-label="Remove milestone">&times;</button></div>';
+  }
+
+  function charterFormHTML(p) {
+    var edit = !!p; p = p || {};
+    var deptKnown = DEPTS.indexOf(p.dept) >= 0;
+    var deptSel = edit ? (deptKnown ? p.dept : (p.dept ? 'Other' : '')) : '';
+    var deptOther = edit && !deptKnown ? (p.dept || '') : '';
+    var cer = edit ? (p.cerRequired ? 'yes' : 'no') : '';
+    var clm = edit ? (p.clmRequired ? 'yes' : 'no') : '';
+    var msRows = '';
+    if (!edit) msRows = [0, 1, 2].map(function (i) { return msRowCharter(null, i); }).join('');
+    return '' +
+      '<form id="charter" class="charter" novalidate data-mode="' + (edit ? 'edit' : 'create') + '" data-id="' + esc(p.id || '') + '">' +
+      '<header class="gate"><div>' + (edit ? '<p class="crumbs"><a href="#p-' + esc(p.id) + '">' + esc(p.name) + '</a> / Edit charter</p><h1>Edit the charter</h1>' : '<h1>Start a project</h1><p class="muted">One page. When it is complete, the project exists and shows up on the board.</p>') + '</div>' +
+      '<div class="gate-meter"><div class="meter" id="c-meterwrap"><span id="c-meter"></span></div><span class="num" id="c-count"></span></div></header>' +
+
+      '<fieldset class="block"><legend>The basics</legend><p class="lede-hint">Who is doing it and who is paying for it.</p>' +
+        '<div class="grid2">' +
+          '<label class="f">Project name <span class="req">required</span><input type="text" id="c-name" value="' + esc(p.name || '') + '" placeholder="Short and specific"></label>' +
+          '<label class="f">Department <span class="req">required</span><select id="c-dept"><option value="">Choose one</option>' + deptOptions(deptSel) + '</select></label>' +
+          '<label class="f" id="c-deptOtherWrap"' + (deptSel === 'Other' ? '' : ' hidden') + '>Department name <span class="req">required</span><input type="text" id="c-deptOther" value="' + esc(deptOther) + '"></label>' +
+          '<label class="f">Project lead <span class="req">required</span><input type="text" id="c-lead" value="' + esc(p.lead || '') + '" placeholder="Who is doing the work"></label>' +
+          '<label class="f">Sponsor <span class="req">required</span><input type="text" id="c-sponsor" value="' + esc(p.sponsor || '') + '" placeholder="Who owns the money and the decision"></label>' +
+        '</div></fieldset>' +
+
+      '<fieldset class="block"><legend>The business case</legend><p class="lede-hint">Three questions, two or three sentences each. If you cannot answer one, the project is not ready.</p>' +
+        '<div class="stack-f">' +
+          '<label class="f">Why are we doing this? <span class="req">required</span><textarea id="c-why" rows="3" placeholder="What is broken, missing, or costing us?">' + esc(p.why || '') + '</textarea></label>' +
+          '<label class="f">What are we going to do? <span class="req">required</span><textarea id="c-what" rows="3" placeholder="What will exist when this is done that does not exist today?">' + esc(p.what || '') + '</textarea></label>' +
+          '<label class="f">What do we get, and how will we know? <span class="req">required</span><textarea id="c-benefit" rows="3" placeholder="Savings, hours, fill rate, revenue, risk removed. Numbers if you have them.">' + esc(p.benefit || '') + '</textarea></label>' +
+        '</div></fieldset>' +
+
+      '<fieldset class="block"><legend>Money</legend><p class="lede-hint">The approved number. Spent and forecast come later, on the project page.</p>' +
+        '<div class="grid2">' +
+          '<label class="f">Approved budget (USD) <span class="req">required</span><input type="number" id="c-budget" min="0" step="1000" inputmode="numeric" value="' + esc(p.budget != null ? p.budget : '') + '" placeholder="0"></label>' +
+          '<label class="f">Strategy link <span class="opt">optional</span><input type="text" id="c-strategy" value="' + esc(p.strategy || '') + '" placeholder="The Parts strategy initiative this supports"></label>' +
+        '</div>' +
+        '<div class="choice"><span class="choice-q">Does this need a CER? <span class="req">required</span></span><span class="hint">Capital expenditure request. Yes for anything capitalized: equipment, buildout, systems we will own.</span>' +
+          '<div class="seg" role="radiogroup" aria-label="CER needed"><label><input type="radio" name="c-cer" value="yes" id="c-cer-yes"' + (cer === 'yes' ? ' checked' : '') + '><span>Yes</span></label><label><input type="radio" name="c-cer" value="no" id="c-cer-no"' + (cer === 'no' ? ' checked' : '') + '><span>No</span></label></div>' +
+          '<div class="grid2 sub" id="c-cerWrap"' + (cer === 'yes' ? '' : ' hidden') + '><label class="f">CER number <span class="opt">if you have it</span><input type="text" id="c-cerNumber" value="' + esc(p.cerNumber || '') + '"></label><label class="f">CER status<select id="c-cerStatus">' + options(CER_STATUS, p.cerStatus || 'Not started') + '</select></label></div>' +
+        '</div>' +
+        '<div class="choice"><span class="choice-q">Will this need a contract through CLM? <span class="req">required</span></span><span class="hint">Contract lifecycle management. Yes for any vendor agreement, statement of work, lease, or service contract Legal has to see.</span>' +
+          '<div class="seg" role="radiogroup" aria-label="CLM needed"><label><input type="radio" name="c-clm" value="yes" id="c-clm-yes"' + (clm === 'yes' ? ' checked' : '') + '><span>Yes</span></label><label><input type="radio" name="c-clm" value="no" id="c-clm-no"' + (clm === 'no' ? ' checked' : '') + '><span>No</span></label></div>' +
+          '<div class="grid2 sub" id="c-clmWrap"' + (clm === 'yes' ? '' : ' hidden') + '><label class="f">With whom, for what<input type="text" id="c-clmWith" value="' + esc(p.clmWith || '') + '" placeholder="Vendor and scope"></label><label class="f">CLM status<select id="c-clmStatus">' + options(CLM_STATUS, p.clmStatus || 'Not started') + '</select></label></div>' +
+        '</div></fieldset>' +
+
+      '<fieldset class="block"><legend>Timing</legend><p class="lede-hint">When it starts and when it is supposed to be done.</p>' +
+        '<div class="grid2"><label class="f">Start date <span class="req">required</span><input type="date" id="c-start" value="' + esc(p.start || '') + '"></label><label class="f">Target end date <span class="req">required</span><input type="date" id="c-end" value="' + esc(p.end || '') + '"></label></div></fieldset>' +
+
+      (edit ? '' :
+      '<fieldset class="block"><legend>First milestones</legend><p class="lede-hint">The big steps, with dates. Up to eight. You can add or change them later on the project page.</p>' +
+        '<div id="c-ms">' + msRows + '</div><div class="actions"><button type="button" class="btn btn-sm" data-action="c-add-ms">Add milestone</button></div></fieldset>') +
+
+      '<div class="form-actions"><div id="c-missing" class="missing" hidden></div></div>' +
+      '<div class="form-actions"><button type="submit" class="btn btn-primary" id="c-submit">' + (edit ? 'Save charter' : 'Create project') + '</button>' + (edit ? '<button type="button" class="btn" data-action="charter-cancel">Cancel</button>' : '') + '</div>' +
+      '</form>';
+  }
+
+  function charterMissing() {
+    var v = function (id) { var el = $('#' + id); return el ? String(el.value || '') : ''; };
+    var miss = [], total = 12;
+    if (!v('c-name').trim()) miss.push('Project name');
+    var dept = v('c-dept');
+    if (!dept) miss.push('Department');
+    else if (dept === 'Other') { total += 1; if (!v('c-deptOther').trim()) miss.push('Department name'); }
+    if (!v('c-lead').trim()) miss.push('Project lead');
+    if (!v('c-sponsor').trim()) miss.push('Sponsor');
+    if (!v('c-why').trim()) miss.push('Why are we doing this');
+    if (!v('c-what').trim()) miss.push('What are we going to do');
+    if (!v('c-benefit').trim()) miss.push('What do we get');
+    if (v('c-budget') === '') miss.push('Approved budget');
+    if (!$('input[name="c-cer"]:checked')) miss.push('CER: yes or no');
+    if (!$('input[name="c-clm"]:checked')) miss.push('CLM: yes or no');
+    if (!v('c-start')) miss.push('Start date');
+    if (!v('c-end')) miss.push('Target end date');
+    else if (v('c-start') && daysBetween(v('c-start'), v('c-end')) < 0) miss.push('End date comes before the start date');
+    return { miss: miss, total: total };
+  }
+  function charterGate() {
+    var f = $('#charter'); if (!f) return;
+    var r = charterMissing(), done = Math.max(0, r.total - r.miss.length);
+    var meter = $('#c-meter'), wrap = $('#c-meterwrap'), count = $('#c-count');
+    if (meter) meter.style.width = Math.round(done / r.total * 100) + '%';
+    if (wrap) wrap.className = 'meter' + (r.miss.length ? '' : ' ok');
+    if (count) count.textContent = r.miss.length ? done + ' of ' + r.total + ' required answered' : 'Complete. The gate is open.';
+    var dw = $('#c-deptOtherWrap'), dsel = $('#c-dept');
+    if (dw && dsel) dw.hidden = dsel.value !== 'Other';
+    var cerYes = $('#c-cer-yes'), cw = $('#c-cerWrap');
+    if (cw) cw.hidden = !(cerYes && cerYes.checked);
+    var clmYes = $('#c-clm-yes'), lw = $('#c-clmWrap');
+    if (lw) lw.hidden = !(clmYes && clmYes.checked);
+    var box = $('#c-missing');
+    if (box && !box.hidden) {
+      if (!r.miss.length) box.hidden = true;
+      else box.innerHTML = 'Still needed:<ul>' + r.miss.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>';
+    }
+  }
+  function readCharter(into) {
+    var v = function (id) { var el = $('#' + id); return el ? String(el.value || '').trim() : ''; };
+    var dept = v('c-dept'); if (dept === 'Other') dept = v('c-deptOther') || 'Other';
+    var cerYes = $('#c-cer-yes'), clmYes = $('#c-clm-yes');
+    into.name = v('c-name'); into.dept = dept; into.lead = v('c-lead'); into.sponsor = v('c-sponsor');
+    into.why = v('c-why'); into.what = v('c-what'); into.benefit = v('c-benefit');
+    into.budget = num(v('c-budget')); into.strategy = v('c-strategy');
+    into.cerRequired = !!(cerYes && cerYes.checked); into.cerNumber = into.cerRequired ? v('c-cerNumber') : ''; into.cerStatus = into.cerRequired ? v('c-cerStatus') : 'Not required';
+    into.clmRequired = !!(clmYes && clmYes.checked); into.clmWith = into.clmRequired ? v('c-clmWith') : ''; into.clmStatus = into.clmRequired ? v('c-clmStatus') : 'Not required';
+    into.start = v('c-start'); into.end = v('c-end');
+    return into;
+  }
+  function readCharterMilestones() {
+    var out = [];
+    $$('#c-ms .ms-row').forEach(function (row) {
+      var name = (row.querySelector('.ms-name').value || '').trim(), due = row.querySelector('.ms-due').value || '';
+      if (name) out.push({ id: uid('m'), name: name, due: due, done: false });
+    });
+    return out.slice(0, MAX_MS);
+  }
+
+  function listHTML() {
+    var f = App.listStatus;
+    var all = App.projects.slice().sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || '')); });
+    var list = f === 'All' ? all : all.filter(function (p) { return (p.status || 'Active') === f; });
+    var chips = ['Active', 'On hold', 'Closed', 'All'].map(function (s) {
+      return '<button class="chip' + (s === f ? ' on' : '') + '" data-action="list-filter" data-v="' + s + '">' + s + '</button>';
+    }).join('');
+    var body;
+    if (!App.ready) body = '<p class="muted">Loading projects...</p>';
+    else if (!all.length) body = '<div class="empty"><h3>No projects yet</h3><p>The first one takes about ten minutes: fill out the charter and it shows up here and on the roll-up.</p>' + (App.readOnly ? '' : '<div class="cta-row" style="justify-content:center"><button class="btn btn-primary" data-action="go" data-to="start">Start a project</button><button class="btn" data-action="load-examples">Load example projects</button></div>') + '</div>';
+    else if (!list.length) body = '<p class="muted">No ' + f.toLowerCase() + ' projects.</p>';
+    else body = '<div class="plist">' + list.map(pcardHTML).join('') + '</div>';
+    return '<div class="page-head"><div><h1>Projects</h1><p class="muted">Everything on the board. Open one to run it.</p></div>' + (App.readOnly ? '' : '<button class="btn btn-primary" data-action="go" data-to="start">Start a project</button>') + '</div><div class="chips">' + chips + '</div>' + body;
+  }
+  function pcardHTML(p) {
+    var h = health(p), ms = p.milestones || [], done = ms.filter(function (m) { return m.done; }).length, next = nextMilestone(p);
+    return '<a class="pcard" href="#p-' + esc(p.id) + '">' +
+      '<div class="pcard-top"><span class="pcard-dept">' + esc(p.dept) + '</span>' + statusBadge(p) + '</div>' +
+      '<h3>' + esc(p.name) + '</h3>' +
+      '<p class="muted small">' + esc(p.lead) + ' &middot; ends ' + esc(fmtDate(p.end)) + '</p>' +
+      '<div class="pills">' + pill('s', h.schedule) + pill('b', h.budget) + (h.help ? '<span class="pill help">Needs help</span>' : '') + '</div>' +
+      '<p class="small muted">' + (ms.length ? done + ' of ' + ms.length + ' milestones done' : 'No milestones yet') + (next ? ' &middot; next: ' + esc(next.name) + ' ' + esc(fmtShort(next.due)) : '') + '</p>' +
+      '<p class="small ' + (h.stale ? 'stale' : 'muted') + '">' + esc(updatedText(h)) + '</p></a>';
+  }
+
+  function projectHTML(id) {
+    var p = findProject(id);
+    if (!p) return App.ready ? '<p class="crumbs"><a href="#projects">Projects</a></p><div class="empty"><h3>Project not found</h3><p>It may have been deleted. Go back to the board.</p></div>' : '<p class="muted">Loading...</p>';
+    if (App.editCharter && !App.readOnly) return charterFormHTML(p);
+    var h = health(p), ms = p.milestones || [], done = ms.filter(function (m) { return m.done; }).length;
+    var today = todayISO(), left = daysBetween(today, p.end), ro = App.readOnly;
+    var when = fmtDate(p.start) + ' to ' + fmtDate(p.end) + (p.status === 'Closed' ? '' : left == null ? '' : left >= 0 ? ' &middot; ' + plural(left, 'day', 'days') + ' left' : ' &middot; ' + plural(-left, 'day', 'days') + ' past the end date');
+    var msRows = ms.map(function (m) {
+      var over = !m.done && m.due && m.due < today;
+      return '<div class="ms-row' + (m.done ? ' done' : '') + (over ? ' over' : '') + '" data-mid="' + esc(m.id) + '">' +
+        '<input type="checkbox" class="ms-done" id="p-ms-done-' + esc(m.id) + '"' + (m.done ? ' checked' : '') + (ro ? ' disabled' : '') + ' aria-label="Done">' +
+        '<input type="text" class="ms-name" id="p-ms-name-' + esc(m.id) + '" value="' + esc(m.name) + '" placeholder="Milestone"' + (ro ? ' disabled' : '') + ' aria-label="Milestone name">' +
+        '<input type="date" class="ms-due" id="p-ms-due-' + esc(m.id) + '" value="' + esc(m.due || '') + '"' + (ro ? ' disabled' : '') + ' aria-label="Milestone date">' +
+        (ro ? '<span></span>' : '<button type="button" class="x" data-action="ms-rm" aria-label="Remove milestone">&times;</button>') + '</div>';
+    }).join('');
+    var upd = (p.updates || []).slice().reverse();
+    var updHTML = upd.length ? upd.map(function (u) {
+      return '<div class="upd-item"><div class="upd-meta"><span class="num">' + esc(fmtDate(u.at)) + '</span>' + (u.by ? '<span>' + esc(u.by) + '</span>' : '') + pill('s', u.schedule) + pill('b', u.budget) + (u.help ? '<span class="pill help">Needs help</span>' : '') + '</div>' +
+        (u.help && u.where ? '<p class="upd-help">Help needed: ' + esc(u.where) + '</p>' : '') +
+        (u.note ? '<p class="upd-note">' + esc(u.note) + '</p>' : '') + '</div>';
+    }).join('') : '<p class="muted small">No updates yet. The first one is the baseline.</p>';
+    var lu = latestUpdate(p);
+    var byDefault = App.myName || (lu && lu.by) || p.lead || '';
+    var approved = num(p.budget), spent = num(p.spent), fc = num(p.forecast);
+    var helpCell = h.help ? '<span class="pill help">Needs help</span><span class="why">' + esc(h.where || 'Where was not specified') + '</span>' : '<span class="pill n">Not asked</span><span class="why">Say so on the weekly update if that changes</span>';
+    var del = ro ? '' : (App.confirmDelete
+      ? '<section class="card danger"><h2>Delete this project?</h2><p>This removes the charter, milestones, and every update for everyone. It cannot be undone.</p><div class="actions"><button class="btn btn-danger" data-action="del-yes">Yes, delete it</button><button class="btn" data-action="del-cancel">Keep it</button></div></section>'
+      : '<section class="card danger"><h2>Delete</h2><p>Finished projects should be closed, not deleted. Delete only duplicates and mistakes.</p><button class="btn btn-danger btn-sm" data-action="del-ask">Delete project</button></section>');
+    return '' +
+      '<p class="crumbs"><a href="#projects">Projects</a> / ' + esc(p.name) + '</p>' +
+      '<header class="phead"><div><p class="eyebrow">' + esc(p.dept) + ' &middot; Lead: ' + esc(p.lead) + ' &middot; Sponsor: ' + esc(p.sponsor) + '</p><h1>' + esc(p.name) + '</h1><p class="muted">' + when + '</p></div>' +
+        '<div class="phead-right"><label for="p-status">Status</label><select id="p-status"' + (ro ? ' disabled' : '') + '>' + options(STATUSES, p.status || 'Active') + '</select></div></header>' +
+      '<section class="health">' +
+        '<div class="hcell"><span class="hl">Schedule</span>' + pill('s', h.schedule) + '<span class="why">' + esc(h.fromUpdate ? 'From the last update. Suggested now: ' + SCHED[h.ss.rag] + ' (' + h.ss.why + ')' : h.ss.why) + '</span></div>' +
+        '<div class="hcell"><span class="hl">Budget</span>' + pill('b', h.budget) + '<span class="why">' + esc(h.fromUpdate ? 'From the last update. Suggested now: ' + BUDG[h.bs.rag] + ' (' + h.bs.why + ')' : h.bs.why) + '</span></div>' +
+        '<div class="hcell"><span class="hl">Help</span>' + helpCell + '</div>' +
+        '<div class="hcell"><span class="hl">Last update</span><span class="' + (h.stale ? 'stale' : '') + '">' + esc(updatedText(h)) + '</span><span class="why">' + (h.stale ? 'Post one so the roll-up stays honest' : 'Weekly is the rhythm') + '</span></div>' +
+      '</section>' +
+      (p.status === 'Closed' ? '<section class="card"><h2>Outcome</h2><label class="f">Did we get what the business case said? <span class="opt">one or two sentences</span><textarea id="p-outcome" rows="2"' + (ro ? ' disabled' : '') + '>' + esc(p.outcome || '') + '</textarea></label>' + (ro ? '' : '<div class="actions"><button class="btn btn-sm" data-action="outcome-save">Save outcome</button></div>') + '</section>' : '') +
+      '<div class="cols"><div class="col">' +
+        '<section class="card"><h2>Milestones <span class="count">' + (ms.length ? done + ' of ' + ms.length + ' done' : 'none yet') + '</span></h2>' +
+          (ms.length ? '<div class="prog"><span style="width:' + Math.round(done / ms.length * 100) + '%"></span></div>' : '') +
+          '<div id="p-ms">' + msRows + '</div>' +
+          (ro ? '' : (ms.length >= MAX_MS ? '<p class="hint" style="margin-top:10px">That is eight. If you need more, it is two projects.</p>' : '<div class="actions"><button class="btn btn-sm" data-action="ms-add">Add milestone</button></div>')) +
+        '</section>' +
+        '<section class="card"><h2>Money</h2>' +
+          '<div class="grid3">' +
+            '<label class="f">Approved<input type="number" id="p-budget" min="0" step="1000" inputmode="numeric" value="' + esc(approved) + '"' + (ro ? ' disabled' : '') + '></label>' +
+            '<label class="f">Spent to date<input type="number" id="p-spent" min="0" step="1000" inputmode="numeric" value="' + esc(spent) + '"' + (ro ? ' disabled' : '') + '></label>' +
+            '<label class="f">Forecast at completion<input type="number" id="p-forecast" min="0" step="1000" inputmode="numeric" value="' + esc(fc) + '"' + (ro ? ' disabled' : '') + ' placeholder="Best guess of the final number"></label>' +
+          '</div>' +
+          '<div class="calc" id="p-calc"></div>' +
+          (ro ? '' : '<div class="actions"><button class="btn btn-sm btn-primary" data-action="money-save">Save money</button><span class="hint">Forecast is the number that matters. Spent is history.</span></div>') +
+        '</section>' +
+        (ro ? '' :
+        '<section class="card"><h2>Weekly update <span class="count">two minutes</span></h2>' +
+          '<form id="update-form" novalidate><div class="grid2">' +
+            '<label class="f">Schedule<select id="p-u-sched">' + ragOptions(SCHED, h.ss.rag) + '</select><span class="suggest">Suggested: ' + esc(SCHED[h.ss.rag]) + ' (' + esc(h.ss.why) + ')</span></label>' +
+            '<label class="f">Budget<select id="p-u-bud">' + ragOptions(BUDG, h.bs.rag) + '</select><span class="suggest">Suggested: ' + esc(BUDG[h.bs.rag]) + ' (' + esc(h.bs.why) + ')</span></label>' +
+          '</div>' +
+          '<div class="stack-f" style="margin-top:14px">' +
+            '<label class="chk"><input type="checkbox" id="p-u-help"> I need help</label>' +
+            '<label class="f" id="p-u-whereWrap" hidden>Where? <span class="req">be specific</span><textarea id="p-u-where" rows="2" placeholder="A decision, a person, money, a vendor, a date. Name it."></textarea></label>' +
+            '<label class="f">What happened this week <span class="opt">optional</span><textarea id="p-u-note" rows="2" placeholder="One or two lines. What moved, what did not."></textarea></label>' +
+            '<label class="f">Posted by<input type="text" id="p-u-by" value="' + esc(byDefault) + '" placeholder="Your name"></label>' +
+          '</div>' +
+          '<div class="form-actions" style="margin-top:14px"><button type="submit" class="btn btn-primary">Post update</button></div></form>' +
+        '</section>') +
+        '<section class="card"><h2>Update history <span class="count">' + plural(upd.length, 'update', 'updates') + '</span></h2><div class="upd">' + updHTML + '</div></section>' +
+      '</div><div class="col">' +
+        '<section class="card"><h2>Charter' + (ro ? '' : ' <button class="btn-link" data-action="charter-edit">Edit</button>') + '</h2><div class="qa">' +
+          '<div><span class="q">Why are we doing this?</span><p class="a">' + esc(p.why) + '</p></div>' +
+          '<div><span class="q">What are we going to do?</span><p class="a">' + esc(p.what) + '</p></div>' +
+          '<div><span class="q">What do we get, and how will we know?</span><p class="a">' + esc(p.benefit) + '</p></div>' +
+          (p.strategy ? '<div><span class="q">Strategy link</span><p class="a">' + esc(p.strategy) + '</p></div>' : '') +
+          '<dl class="kv"><dt>Created</dt><dd>' + esc(fmtDate(p.createdAt)) + '</dd><dt>Sponsor</dt><dd>' + esc(p.sponsor) + '</dd><dt>Lead</dt><dd>' + esc(p.lead) + '</dd></dl>' +
+        '</div></section>' +
+        '<section class="card"><h2>Funding and contracts</h2><div class="stack-f">' +
+          '<div><span class="choice-q">CER</span><div class="seg" style="margin-top:6px"><label><input type="radio" name="p-cer" value="yes" id="p-cer-yes"' + (p.cerRequired ? ' checked' : '') + (ro ? ' disabled' : '') + '><span>Needed</span></label><label><input type="radio" name="p-cer" value="no" id="p-cer-no"' + (!p.cerRequired ? ' checked' : '') + (ro ? ' disabled' : '') + '><span>Not needed</span></label></div>' +
+            '<div class="grid2 sub" id="p-cerWrap"' + (p.cerRequired ? '' : ' hidden') + '><label class="f">CER number<input type="text" id="p-cerNumber" value="' + esc(p.cerNumber || '') + '"' + (ro ? ' disabled' : '') + '></label><label class="f">Status<select id="p-cerStatus"' + (ro ? ' disabled' : '') + '>' + options(CER_STATUS, CER_STATUS.indexOf(p.cerStatus) >= 0 ? p.cerStatus : 'Not started') + '</select></label></div></div>' +
+          '<div><span class="choice-q">Contract through CLM</span><div class="seg" style="margin-top:6px"><label><input type="radio" name="p-clm" value="yes" id="p-clm-yes"' + (p.clmRequired ? ' checked' : '') + (ro ? ' disabled' : '') + '><span>Needed</span></label><label><input type="radio" name="p-clm" value="no" id="p-clm-no"' + (!p.clmRequired ? ' checked' : '') + (ro ? ' disabled' : '') + '><span>Not needed</span></label></div>' +
+            '<div class="grid2 sub" id="p-clmWrap"' + (p.clmRequired ? '' : ' hidden') + '><label class="f">With whom, for what<input type="text" id="p-clmWith" value="' + esc(p.clmWith || '') + '"' + (ro ? ' disabled' : '') + '></label><label class="f">Status<select id="p-clmStatus"' + (ro ? ' disabled' : '') + '>' + options(CLM_STATUS, CLM_STATUS.indexOf(p.clmStatus) >= 0 ? p.clmStatus : 'Not started') + '</select></label></div></div>' +
+          (ro ? '' : '<div class="actions"><button class="btn btn-sm" data-action="fund-save">Save funding</button></div>') +
+        '</div></section>' + del +
+      '</div></div>';
+  }
+  function moneyPreview() {
+    var box = $('#p-calc'); if (!box) return;
+    var a = num(($('#p-budget') || {}).value), s = num(($('#p-spent') || {}).value), f = num(($('#p-forecast') || {}).value);
+    var base = f > 0 ? f : s, variance = base - a, pct = a ? Math.round(s / a * 100) : 0;
+    box.innerHTML =
+      '<div><span class="k">Remaining</span><span class="v ' + (a - s < 0 ? 'bad' : '') + '">' + money(a - s) + '</span></div>' +
+      '<div><span class="k">Spent</span><span class="v">' + pct + '%</span></div>' +
+      '<div><span class="k">Forecast vs approved</span><span class="v ' + (variance > 0 ? 'bad' : 'ok') + '">' + (a ? signed(variance) : 'n/a') + '</span></div>';
+  }
+
+  function reportHTML() {
+    var all = App.projects.slice();
+    var depts = {};
+    all.forEach(function (p) { if (p.dept) depts[p.dept] = true; });
+    var deptList = Object.keys(depts).sort();
+    var list = all.filter(function (p) {
+      if (App.rDept && p.dept !== App.rDept) return false;
+      var s = p.status || 'Active';
+      if (App.rStatus === 'All') return true;
+      if (App.rStatus === 'Open') return s !== 'Closed';
+      return s === App.rStatus;
+    });
+    list.sort(function (a, b) { var d = attention(b) - attention(a); if (d) return d; return String(a.end || '').localeCompare(String(b.end || '')); });
+    var hs = list.map(health);
+    var approved = 0, forecast = 0, spent = 0, helps = 0, reds = 0, stale = 0;
+    list.forEach(function (p, i) {
+      approved += num(p.budget); spent += num(p.spent); forecast += num(p.forecast) > 0 ? num(p.forecast) : num(p.spent);
+      if (hs[i].help) helps++;
+      if (hs[i].schedule === 'red' || hs[i].budget === 'red') reds++;
+      if (hs[i].stale) stale++;
+    });
+    var deptSel = '<option value="">All departments</option>' + deptList.map(function (d) { return '<option value="' + esc(d) + '"' + (d === App.rDept ? ' selected' : '') + '>' + esc(d) + '</option>'; }).join('');
+    var statusSel = ['Active', 'Open', 'On hold', 'Closed', 'All'].map(function (s) { return '<option value="' + s + '"' + (s === App.rStatus ? ' selected' : '') + '>' + (s === 'Open' ? 'Active and on hold' : s) + '</option>'; }).join('');
+    var rows = list.map(function (p, i) {
+      var h = hs[i], ms = p.milestones || [], done = ms.filter(function (m) { return m.done; }).length;
+      return '<tr class="rowlink" data-href="#p-' + esc(p.id) + '" tabindex="0">' +
+        '<td class="name" data-l="Project">' + esc(p.name) + '<span class="sub">' + esc(p.dept) + ' &middot; ' + esc(p.lead) + statusBadge(p).replace('class="badge', 'style="margin-left:6px" class="badge') + '</span></td>' +
+        '<td data-l="Ends" class="num">' + esc(fmtShort(p.end)) + '</td>' +
+        '<td data-l="Schedule">' + pill('s', h.schedule) + '</td>' +
+        '<td data-l="Budget">' + pill('b', h.budget) + '</td>' +
+        '<td data-l="Spent / approved" class="num">' + esc(moneyShort(p.spent)) + ' / ' + esc(moneyShort(p.budget)) + '</td>' +
+        '<td data-l="Milestones" class="num">' + (ms.length ? done + ' / ' + ms.length : '0') + '</td>' +
+        '<td data-l="Help">' + (h.help ? '<span class="pill help">Yes</span><span class="where">' + esc(h.where || 'not specified') + '</span>' : '<span class="muted">No</span>') + '</td>' +
+        '<td data-l="Updated" class="upd ' + (h.stale ? 'stale' : 'muted') + '">' + (h.age == null ? 'never' : h.age === 0 ? 'today' : plural(h.age, 'day', 'days') + ' ago') + '</td></tr>';
+    }).join('');
+    var table = !App.ready ? '<p class="muted">Loading projects...</p>' : !list.length ? '<div class="empty"><h3>Nothing to report</h3><p>No projects match this filter.</p></div>' :
+      '<div class="tbl-wrap"><table><thead><tr><th>Project</th><th class="num">Ends</th><th>Schedule</th><th>Budget</th><th class="num">Spent / approved</th><th class="num">Milestones</th><th>Help</th><th>Updated</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    var scope = App.rDept || 'Aftersales';
+    return '' +
+      '<div class="page-head"><div><h1>Roll-up</h1><p class="muted">What goes to the executives. Sorted by who needs attention first.</p></div>' +
+        '<div class="rfilters"><label>Department<select id="r-dept">' + deptSel + '</select></label><label>Status<select id="r-status">' + statusSel + '</select></label><button class="btn" data-action="export"' + (list.length ? '' : ' disabled') + '>Export for monday.com</button></div></div>' +
+      '<section class="tiles">' +
+        '<div class="tile"><span class="k">Projects</span><span class="v">' + list.length + '</span><span class="s">' + esc(scope) + '</span></div>' +
+        '<div class="tile"><span class="k">Approved</span><span class="v">' + esc(moneyShort(approved)) + '</span><span class="s">' + esc(moneyShort(spent)) + ' spent</span></div>' +
+        '<div class="tile' + (forecast > approved ? ' alert' : '') + '"><span class="k">Forecast</span><span class="v">' + esc(moneyShort(forecast)) + '</span><span class="s">' + (approved ? esc(signed(forecast - approved)) + ' vs approved' : 'no budgets set') + '</span></div>' +
+        '<div class="tile' + (helps ? ' alert' : '') + '"><span class="k">Need help</span><span class="v">' + helps + '</span><span class="s">asking for it</span></div>' +
+        '<div class="tile' + (reds ? ' alert' : '') + '"><span class="k">Off track</span><span class="v">' + reds + '</span><span class="s">schedule or budget</span></div>' +
+        '<div class="tile' + (stale ? ' warn' : '') + '"><span class="k">Quiet</span><span class="v">' + stale + '</span><span class="s">no update in ' + STALE_DAYS + '+ days</span></div>' +
+      '</section>' +
+      '<section class="card summary"><div class="sum-head"><h2>Executive summary</h2><button class="btn btn-sm" data-action="copy-summary">Copy</button></div><p id="r-summary">' + esc(execSummary(list, hs, { approved: approved, forecast: forecast, helps: helps, reds: reds, stale: stale, scope: scope })) + '</p></section>' +
+      table +
+      '<div class="csvbox" id="r-csvbox"' + (App.csvOpen ? '' : ' hidden') + '><p class="hint">If the download did not start, copy the CSV from here.</p><textarea id="r-csvtext" readonly aria-label="CSV export"></textarea><div class="actions"><button class="btn btn-sm" data-action="copy-csv">Copy CSV</button></div></div>';
+  }
+  function execSummary(list, hs, t) {
+    if (!App.ready) return '';
+    var n = list.length;
+    if (!n) return 'No projects match this filter.';
+    var isActive = App.rStatus === 'Active';
+    var s = 'As of ' + fmtDate(todayISO()) + ', ' + t.scope + ' has ' + plural(n, isActive ? 'active project' : 'project', isActive ? 'active projects' : 'projects') + ' with ' + money(t.approved) + ' approved and ' + money(t.forecast) + ' forecast at completion (' + signed(t.forecast - t.approved) + '). ';
+    var helps = [], reds = [], quiet = [];
+    list.forEach(function (p, i) {
+      var h = hs[i];
+      if (h.help) helps.push(p.name + ' (' + (h.where || 'where not specified') + ')');
+      if (h.schedule === 'red' || h.budget === 'red') reds.push(p.name + ' (' + [h.schedule === 'red' ? 'schedule' : '', h.budget === 'red' ? 'budget' : ''].filter(Boolean).join(' and ') + ')');
+      if (h.stale) quiet.push(p.name);
+    });
+    s += helps.length ? plural(helps.length, 'project needs', 'projects need') + ' help: ' + helps.join('; ') + '. ' : 'No one is asking for help. ';
+    if (reds.length) s += (reds.length === 1 ? '1 is off track: ' : reds.length + ' are off track: ') + reds.join('; ') + '. ';
+    if (quiet.length) s += (quiet.length === 1 ? '1 has' : quiet.length + ' have') + ' not posted an update in more than two weeks: ' + quiet.join(', ') + '.';
+    return s.trim();
+  }
+  function csvCell(v) {
+    v = String(v == null ? '' : v);
+    return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+  function buildCSV(list) {
+    var head = ['Name', 'Status', 'Department', 'Project Lead', 'Sponsor', 'Start Date', 'End Date', 'Approved Budget', 'Spent to Date', 'Forecast at Completion', 'Forecast Variance', 'Schedule', 'Budget Health', 'Milestones Done', 'Milestones Total', 'Next Milestone', 'Next Milestone Date', 'Needs Help', 'Help Where', 'CER Required', 'CER Number', 'CER Status', 'CLM Required', 'CLM With', 'CLM Status', 'Last Update', 'Posted By', 'Strategy Link', 'Why', 'What', 'What We Get', 'Outcome'];
+    var lines = [head.map(csvCell).join(',')];
+    list.forEach(function (p) {
+      var h = health(p), ms = p.milestones || [], done = ms.filter(function (m) { return m.done; }).length, next = nextMilestone(p), lu = latestUpdate(p);
+      var fc = num(p.forecast) > 0 ? num(p.forecast) : num(p.spent);
+      lines.push([p.name, p.status || 'Active', p.dept, p.lead, p.sponsor, p.start, p.end, num(p.budget), num(p.spent), fc, fc - num(p.budget), SCHED[h.schedule], BUDG[h.budget], done, ms.length, next ? next.name : '', next ? next.due : '', h.help ? 'Yes' : 'No', h.where, p.cerRequired ? 'Yes' : 'No', p.cerNumber || '', p.cerStatus || '', p.clmRequired ? 'Yes' : 'No', p.clmWith || '', p.clmStatus || '', lu ? String(lu.at).slice(0, 10) : '', lu ? lu.by || '' : '', p.strategy || '', p.why, p.what, p.benefit, p.outcome || ''].map(csvCell).join(','));
+    });
+    return lines.join('\r\n');
+  }
+  function reportList() {
+    return App.projects.filter(function (p) {
+      if (App.rDept && p.dept !== App.rDept) return false;
+      var s = p.status || 'Active';
+      if (App.rStatus === 'All') return true;
+      if (App.rStatus === 'Open') return s !== 'Closed';
+      return s === App.rStatus;
+    }).sort(function (a, b) { return attention(b) - attention(a); });
+  }
+  function exportCSV() {
+    var csv = buildCSV(reportList());
+    try {
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'painless-pm-rollup-' + todayISO() + '.csv';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      toast('Export downloaded');
+    } catch (e) { showCsv(csv); }
+  }
+  function showCsv(csv) {
+    App.csvOpen = true;
+    var box = $('#r-csvbox'), ta = $('#r-csvtext');
+    if (box) box.hidden = false;
+    if (ta) { ta.value = csv; ta.focus(); ta.select(); }
+  }
+
+  // ---------- render ----------
+  function captureInputs(root) {
+    var saved = { vals: {}, active: null, selStart: null, selEnd: null };
+    $$('input[id],textarea[id],select[id]', root).forEach(function (el) {
+      saved.vals[el.id] = el.type === 'checkbox' || el.type === 'radio' ? { checked: el.checked } : { value: el.value };
+    });
+    var a = document.activeElement;
+    if (a && a.id && root.contains(a)) {
+      saved.active = a.id;
+      try { saved.selStart = a.selectionStart; saved.selEnd = a.selectionEnd; } catch (e) {}
+    }
+    return saved;
+  }
+  function restoreInputs(root, saved) {
+    Object.keys(saved.vals).forEach(function (id) {
+      var el = root.querySelector('#' + CSS.escape(id)); if (!el) return;
+      var v = saved.vals[id];
+      if ('checked' in v) el.checked = v.checked; else el.value = v.value;
+    });
+    if (saved.active) {
+      var el = root.querySelector('#' + CSS.escape(saved.active));
+      if (el) { try { el.focus({ preventScroll: true }); if (saved.selStart != null && typeof el.setSelectionRange === 'function') el.setSelectionRange(saved.selStart, saved.selEnd); } catch (e) {} }
+    }
+  }
+  function render(opts) {
+    var app = $('#app'); if (!app) return;
+    var preserve = opts && opts.preserve;
+    var saved = preserve ? captureInputs(app) : null;
+    var html = '';
+    if (App.view === 'how') html = howHTML();
+    else if (App.view === 'start') html = App.readOnly ? '<div class="empty"><h3>View access only</h3><p>Ask the page owner for Contributor access to start a project.</p></div>' : charterFormHTML(null);
+    else if (App.view === 'projects') html = App.pid ? projectHTML(App.pid) : listHTML();
+    else if (App.view === 'report') html = reportHTML();
+    app.innerHTML = html;
+    if (saved) restoreInputs(app, saved);
+    afterRender();
+    setTabs();
+  }
+  function afterRender() {
+    if ($('#charter')) charterGate();
+    moneyPreview();
+    var help = $('#p-u-help'), ww = $('#p-u-whereWrap');
+    if (help && ww) ww.hidden = !help.checked;
+    var cy = $('#p-cer-yes'), cw = $('#p-cerWrap'); if (cy && cw) cw.hidden = !cy.checked;
+    var ly = $('#p-clm-yes'), lw = $('#p-clmWrap'); if (ly && lw) lw.hidden = !ly.checked;
+    if (App.csvOpen && $('#r-csvtext') && !$('#r-csvtext').value) $('#r-csvtext').value = buildCSV(reportList());
+  }
+  function setTabs() {
+    $$('.tab').forEach(function (b) {
+      if (b.dataset.tab === App.view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+  }
+  function route() {
+    var h = (location.hash || '').replace(/^#/, '');
+    App.confirmDelete = false; App.editCharter = false; App.csvOpen = false;
+    if (h === 'start' || h === 'projects' || h === 'report' || h === 'how') { App.view = h; App.pid = null; }
+    else if (/^p-[A-Za-z0-9]+$/.test(h)) { App.view = 'projects'; App.pid = h.slice(2); }
+    else { App.view = 'how'; App.pid = null; }
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  // ---------- events ----------
+  function currentProject() { return App.pid ? findProject(App.pid) : null; }
+  function readMilestonesFromDOM(p) {
+    var out = [];
+    $$('#p-ms .ms-row').forEach(function (row) {
+      var id = row.getAttribute('data-mid');
+      var old = (p.milestones || []).filter(function (m) { return m.id === id; })[0] || { id: id || uid('m') };
+      out.push({ id: old.id, name: (row.querySelector('.ms-name').value || '').trim() || old.name || 'Milestone', due: row.querySelector('.ms-due').value || '', done: !!row.querySelector('.ms-done').checked });
+    });
+    return out;
+  }
+  function onClick(e) {
+    var row = e.target.closest('tr.rowlink');
+    if (row && !e.target.closest('a,button')) { location.hash = row.getAttribute('data-href'); return; }
+    var el = e.target.closest('[data-action]'); if (!el) return;
+    var act = el.getAttribute('data-action'), p;
+    if (act === 'go') { location.hash = '#' + el.getAttribute('data-to'); return; }
+    if (act === 'list-filter') { App.listStatus = el.getAttribute('data-v'); render(); return; }
+    if (act === 'c-add-ms') {
+      var box = $('#c-ms'); if (!box) return;
+      var n = $$('#c-ms .ms-row').length;
+      if (n >= MAX_MS) { toast('Eight is the limit. If you need more, it is two projects.'); return; }
+      box.insertAdjacentHTML('beforeend', msRowCharter(null, Date.now()));
+      var last = box.lastElementChild.querySelector('.ms-name'); if (last) last.focus();
+      return;
+    }
+    if (act === 'c-rm-ms') { var r = el.closest('.ms-row'); if (r) r.remove(); return; }
+    if (act === 'charter-edit') { App.editCharter = true; render(); window.scrollTo(0, 0); return; }
+    if (act === 'charter-cancel') { App.editCharter = false; render(); return; }
+    if (act === 'ms-add') {
+      p = currentProject(); if (!p) return;
+      var q = clone(p); q.milestones = readMilestonesFromDOM(p);
+      if (q.milestones.length >= MAX_MS) return;
+      q.milestones.push({ id: uid('m'), name: '', due: '', done: false });
+      persist(q); render({ preserve: true });
+      var inputs = $$('#p-ms .ms-name'); var lastIn = inputs[inputs.length - 1]; if (lastIn) lastIn.focus();
+      return;
+    }
+    if (act === 'ms-rm') {
+      p = currentProject(); if (!p) return;
+      var mid = el.closest('.ms-row').getAttribute('data-mid');
+      var q2 = clone(p); q2.milestones = readMilestonesFromDOM(p).filter(function (m) { return m.id !== mid; });
+      persist(q2); render({ preserve: true });
+      return;
+    }
+    if (act === 'money-save') {
+      p = currentProject(); if (!p) return;
+      var q3 = clone(p); q3.budget = num($('#p-budget').value); q3.spent = num($('#p-spent').value); q3.forecast = num($('#p-forecast').value);
+      persist(q3).then(function (ok) { if (ok) toast('Money saved'); });
+      render({ preserve: true });
+      return;
+    }
+    if (act === 'fund-save') {
+      p = currentProject(); if (!p) return;
+      var q4 = clone(p);
+      q4.cerRequired = !!$('#p-cer-yes').checked; q4.cerNumber = q4.cerRequired ? ($('#p-cerNumber').value || '').trim() : ''; q4.cerStatus = q4.cerRequired ? $('#p-cerStatus').value : 'Not required';
+      q4.clmRequired = !!$('#p-clm-yes').checked; q4.clmWith = q4.clmRequired ? ($('#p-clmWith').value || '').trim() : ''; q4.clmStatus = q4.clmRequired ? $('#p-clmStatus').value : 'Not required';
+      persist(q4).then(function (ok) { if (ok) toast('Funding saved'); });
+      render({ preserve: true });
+      return;
+    }
+    if (act === 'outcome-save') {
+      p = currentProject(); if (!p) return;
+      var q5 = clone(p); q5.outcome = ($('#p-outcome').value || '').trim();
+      persist(q5).then(function (ok) { if (ok) toast('Outcome saved'); });
+      return;
+    }
+    if (act === 'del-ask') { App.confirmDelete = true; render({ preserve: true }); return; }
+    if (act === 'del-cancel') { App.confirmDelete = false; render({ preserve: true }); return; }
+    if (act === 'del-yes') {
+      p = currentProject(); if (!p) return;
+      var id = p.id;
+      App.projects = App.projects.filter(function (x) { return x.id !== id; });
+      App.store.remove(id).then(function () { toast('Project deleted'); }, function (err) { toast(errMsg(err), true); });
+      location.hash = '#projects';
+      return;
+    }
+    if (act === 'export') { exportCSV(); return; }
+    if (act === 'load-examples') {
+      var existing = {};
+      App.projects.forEach(function (x) { existing[x.id] = true; });
+      EXAMPLES.forEach(function (ex) { if (!existing[ex.id]) persist(clone(ex)); });
+      toast('Example projects loaded');
+      render();
+      return;
+    }
+    if (act === 'copy-summary') { var s = $('#r-summary'); if (s) copyText(s.textContent, 'Summary copied'); return; }
+    if (act === 'copy-csv') { var ta = $('#r-csvtext'); if (ta) copyText(ta.value, 'CSV copied'); return; }
+  }
+  function onChange(e) {
+    var t = e.target, p;
+    if (t.name === 'c-cer' || t.name === 'c-clm' || t.id === 'c-dept') { charterGate(); return; }
+    if (t.id === 'p-status') {
+      p = currentProject(); if (!p) return;
+      var q = clone(p); q.status = t.value;
+      persist(q).then(function (ok) { if (ok) toast('Status: ' + q.status); });
+      render({ preserve: true });
+      return;
+    }
+    if (t.classList.contains('ms-done') || (t.closest('#p-ms') && (t.classList.contains('ms-name') || t.classList.contains('ms-due')))) {
+      p = currentProject(); if (!p) return;
+      var q2 = clone(p); q2.milestones = readMilestonesFromDOM(p);
+      persist(q2); render({ preserve: true });
+      return;
+    }
+    if (t.id === 'p-u-help') { var ww = $('#p-u-whereWrap'); if (ww) { ww.hidden = !t.checked; if (t.checked) { var w = $('#p-u-where'); if (w) w.focus(); } } return; }
+    if (t.name === 'p-cer') { var cw = $('#p-cerWrap'); if (cw) cw.hidden = !$('#p-cer-yes').checked; return; }
+    if (t.name === 'p-clm') { var lw = $('#p-clmWrap'); if (lw) lw.hidden = !$('#p-clm-yes').checked; return; }
+    if (t.id === 'r-dept') { App.rDept = t.value; render(); return; }
+    if (t.id === 'r-status') { App.rStatus = t.value; render(); return; }
+  }
+  function onInput(e) {
+    var t = e.target;
+    if (t.closest('#charter')) { charterGate(); return; }
+    if (t.id === 'p-budget' || t.id === 'p-spent' || t.id === 'p-forecast') { moneyPreview(); return; }
+  }
+  function onSubmit(e) {
+    var f = e.target;
+    if (f.id === 'charter') {
+      e.preventDefault();
+      var r = charterMissing();
+      if (r.miss.length) {
+        var box = $('#c-missing');
+        box.hidden = false;
+        box.innerHTML = 'Still needed:<ul>' + r.miss.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul>';
+        box.scrollIntoView({ block: 'center' });
+        return;
+      }
+      if (f.getAttribute('data-mode') === 'edit') {
+        var p = findProject(f.getAttribute('data-id')); if (!p) return;
+        var q = readCharter(clone(p));
+        persist(q).then(function (ok) { if (ok) toast('Charter saved'); });
+        App.editCharter = false; render(); window.scrollTo(0, 0);
+      } else {
+        var np = readCharter({});
+        np.id = uid('p'); np.status = 'Active'; np.spent = 0; np.forecast = 0; np.outcome = '';
+        np.milestones = readCharterMilestones(); np.updates = [];
+        np.createdAt = new Date().toISOString();
+        persist(np).then(function (ok) { if (ok) toast('Project created. It is on the board.'); });
+        location.hash = '#p-' + np.id;
+      }
+      return;
+    }
+    if (f.id === 'update-form') {
+      e.preventDefault();
+      var cp = currentProject(); if (!cp) return;
+      var help = !!$('#p-u-help').checked, where = ($('#p-u-where').value || '').trim();
+      if (help && !where) { toast('Say where you need help. That is the whole point.', true); $('#p-u-where').focus(); return; }
+      var by = ($('#p-u-by').value || '').trim();
+      try { if (by) localStorage.setItem('ppm.name', by); } catch (err) {}
+      App.myName = by;
+      var q6 = clone(cp);
+      q6.updates = (q6.updates || []).concat([{ at: new Date().toISOString(), schedule: $('#p-u-sched').value, budget: $('#p-u-bud').value, help: help, where: help ? where : '', note: ($('#p-u-note').value || '').trim(), by: by }]);
+      if (q6.updates.length > 60) q6.updates = q6.updates.slice(-60);
+      persist(q6).then(function (ok) { if (ok) toast(help ? 'Update posted. The roll-up now shows you need help.' : 'Update posted'); });
+      $('#p-u-note').value = ''; $('#p-u-where').value = ''; $('#p-u-help').checked = false;
+      render({ preserve: true });
+      window.scrollTo(0, 0);
+      return;
+    }
+  }
+  function onKey(e) {
+    if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('rowlink')) { location.hash = e.target.getAttribute('data-href'); }
+  }
+
+  // ---------- init ----------
+  function init() {
+    try { App.myName = localStorage.getItem('ppm.name') || ''; } catch (e) {}
+    var app = $('#app');
+    app.addEventListener('click', onClick);
+    app.addEventListener('change', onChange);
+    app.addEventListener('input', onInput);
+    app.addEventListener('submit', onSubmit);
+    app.addEventListener('keydown', onKey);
+    $$('.tab').forEach(function (b) { b.addEventListener('click', function () { location.hash = '#' + b.dataset.tab; }); });
+    window.addEventListener('hashchange', route);
+    route();
+    App.store = localStore(); App.storeKind = 'local';
+    updateBanner();
+    App.store.subscribe(function (list) {
+      App.projects = list;
+      App.ready = true;
+      if (App.view === 'start') return;
+      render({ preserve: true });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+
+</body>
+</html>
