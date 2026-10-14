@@ -311,7 +311,7 @@ th.num{text-align:right}
     <div class="brand">
       <div class="mark" aria-hidden="true">P</div>
       <div class="brand-text">
-        <span class="eyebrow">AGCO Aftersales Parts</span>
+        <span class="eyebrow">Run a project in one page</span>
         <span class="name">Painless Project Management</span>
       </div>
     </div>
@@ -877,7 +877,7 @@ th.num{text-align:right}
     }).join('');
     var table = !App.ready ? '<p class="muted">Loading projects...</p>' : !list.length ? '<div class="empty"><h3>Nothing to report</h3><p>No projects match this filter.</p></div>' :
       '<div class="tbl-wrap"><table><thead><tr><th>Project</th><th class="num">Ends</th><th>Schedule</th><th>Budget</th><th class="num">Spent / approved</th><th class="num">Milestones</th><th>Help</th><th>Updated</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
-    var scope = App.rDept || 'Aftersales';
+    var scope = App.rDept || 'All departments';
     return '' +
       '<div class="page-head"><div><h1>Roll-up</h1><p class="muted">What goes to the executives. Sorted by who needs attention first.</p></div>' +
         '<div class="rfilters"><label>Department<select id="r-dept">' + deptSel + '</select></label><label>Status<select id="r-status">' + statusSel + '</select></label><button class="btn" data-action="export"' + (list.length ? '' : ' disabled') + '>Export for monday.com</button></div></div>' +

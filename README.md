@@ -1,6 +1,6 @@
 # Painless Project Management
 
-A one-page way to run a project in Aftersales Parts without becoming a project manager.
+A one-page way to run a project without becoming a project manager.
 
 Open `index.html` in any browser. No install, no build step, no dependencies beyond two Google Fonts. The page opens with three example projects loaded so you can see how it works; delete them from their project pages when you are ready to use it for real.
 
